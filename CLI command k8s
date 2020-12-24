@@ -1,0 +1,74 @@
+=============================================================================
+build docker image
+=============================================================================
+
+
+docker build -t php-apache .
+
+cd php
+docker run -p 8080:8080 php-apache:v0.1
+
+
+
+=============================================================================
+Created cluster kubernetes cluster
+=============================================================================
+
+kubectl apply -f https://k8s.io/examples/application/php-apache.yaml
+
+deployment.apps/php-apache created
+service/php-apache create
+
+
+=============================================================================
+Create Horizontal Pod Autoscaler and Metric load
+=============================================================================
+
+kubectl autoscale deployment php-apache --cpu-percent=50 --min=1 --max=10
+
+horizontalpodautoscaler.autoscaling/php-apache autoscaled
+
+
+kubectl get hpa
+
+=============================================================================
+Increase load
+=============================================================================
+
+kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+
+kubectl get hpa
+
+
+kubectl get deployment php-apache
+
+============================================================================
+output :
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+php-apache   7/7      7           7           19m
+
+============================================================================
+
+Stop Load
+============================================================================
+
+< ctrl +C >
+
+kubectl get hpa
+
+
+kubectl get deployment php-apache
+
+
+===========================================================================
+
+output :
+
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+php-apache   1/1     1            1           27m
+============================================================================
+
+
+
+
+
